@@ -168,9 +168,6 @@ export class ProjectPolicyConfigComponent implements OnInit {
             });
     }
 
-    public get withNotary(): boolean {
-        return this.systemInfo ? this.systemInfo.with_notary : false;
-    }
     retrieve(state?: State): any {
         this.projectService.getProject(this.projectId).subscribe(
             response => {

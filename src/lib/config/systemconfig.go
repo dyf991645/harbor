@@ -83,11 +83,6 @@ func JobserviceSecret() string {
 	return os.Getenv("JOBSERVICE_SECRET")
 }
 
-// GetRedisOfRegURL returns the URL of Redis used by registry
-func GetRedisOfRegURL() string {
-	return os.Getenv("_REDIS_URL_REG")
-}
-
 // GetPortalURL returns the URL of portal
 func GetPortalURL() string {
 	url := os.Getenv("PORTAL_URL")
@@ -132,9 +127,9 @@ func GetExecutionStatusRefreshIntervalSeconds() int64 {
 	return DefaultMgr().Get(backgroundCtx, common.ExecutionStatusRefreshIntervalSeconds).GetInt64()
 }
 
-// WithNotary returns a bool value to indicate if Harbor's deployed with Notary
-func WithNotary() bool {
-	return DefaultMgr().Get(backgroundCtx, common.WithNotary).GetBool()
+// GetQuotaUpdateProvider returns the provider for updating quota.
+func GetQuotaUpdateProvider() string {
+	return DefaultMgr().Get(backgroundCtx, common.QuotaUpdateProvider).GetString()
 }
 
 // WithTrivy returns a bool value to indicate if Harbor's deployed with Trivy.
@@ -193,12 +188,6 @@ func LocalCoreURL() string {
 // InternalTokenServiceEndpoint returns token service endpoint for internal communication between Harbor containers
 func InternalTokenServiceEndpoint() string {
 	return InternalCoreURL() + "/service/token"
-}
-
-// InternalNotaryEndpoint returns notary server endpoint for internal communication between Harbor containers
-// This is currently a conventional value and can be unaccessible when Harbor is not deployed with Notary.
-func InternalNotaryEndpoint() string {
-	return DefaultMgr().Get(backgroundCtx, common.NotaryURL).GetString()
 }
 
 // TrivyAdapterURL returns the endpoint URL of a Trivy adapter instance, by default it's the one deployed within Harbor.

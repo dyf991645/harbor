@@ -24,11 +24,6 @@ class InternalTLS:
         'trivy_adapter.crt', 'trivy_adapter.key',
     }
 
-    notary_certs_filename = {
-        'notary_signer.crt', 'notary_signer.key',
-        'notary_server.crt', 'notary_server.key'
-    }
-
     db_certs_filename = {
         'harbor_db.crt', 'harbor_db.key'
     }
@@ -40,8 +35,6 @@ class InternalTLS:
         self.tls_dir = tls_dir
         if self.enabled:
             self.required_filenames = self.harbor_certs_filename
-            if kwargs.get('with_notary'):
-                self.required_filenames.update(self.notary_certs_filename)
             if kwargs.get('with_trivy'):
                 self.required_filenames.update(self.trivy_certs_filename)
             if not kwargs.get('external_database'):
@@ -172,7 +165,7 @@ class OtelExporter:
         self.url_path = config.get('url_path')
         self.compression = config.get('compression') or False
         self.insecure = config.get('insecure') or False
-        self.timeout = config.get('timeout') or '10s'
+        self.timeout = config.get('timeout') or '10'
 
     def validate(self):
         if not self.endpoint:
@@ -248,3 +241,14 @@ class Cache:
         if not self.expire_hours or self.expire_hours <= 0:
             raise Exception('cache expire hours should be positive number')
         return
+
+class Core:
+    def __init__(self, config: dict):
+        self.quota_update_provider = config.get('quota_update_provider') or 'db'
+
+    def validate(self):
+        if not self.quota_update_provider:
+            return
+
+        if self.quota_update_provider not in ['db', 'redis']:
+            raise Exception('invalid quota update provider: {}'.format(self.quota_update_provider))

@@ -25,7 +25,7 @@ Follow us on Twitter at [@project_harbor][twitter]
 ### Fork Repository
 
 Fork the Harbor repository on GitHub to your personal account.
-```
+```sh
 #Set golang environment
 export GOPATH=$HOME/go
 mkdir -p $GOPATH/src/github.com/goharbor
@@ -42,6 +42,8 @@ git fetch $USER
 
 ```
 **NOTES:** Note that GOPATH can be any directory, the example above uses $HOME/go. Change $USER above to your own GitHub username.
+
+### Build Project
 
 To build the project, please refer the [build](https://goharbor.io/docs/edge/build-customize-contribute/compile-guide/) guideline.
 
@@ -132,12 +134,7 @@ The folder graph below shows the structure of the source code folder `harbor/src
 │   ├── registry
 │   ├── router
 │   ├── v2.0
-├── testing             # Some utilities to handle testing.
-└── vendor              # Go code dependencies
-    ├── github.com
-    ├── golang.org
-    ├── google.golang.org
-    └── gopkg.in
+└── testing             # Some utilities to handle testing.
 ```
 
 ### Setup Development Environment
@@ -165,11 +162,10 @@ Harbor backend is written in [Go](http://golang.org/). If you don't have a Harbo
 |   2.5    |    1.17.7     |
 |   2.6    |    1.18.6     |
 |   2.7    |    1.19.4     |
-|   2.8    |    1.20.3     |
+|   2.8    |    1.20.6     |
+|   2.9    |    1.21.3     |
 
 Ensure your GOPATH and PATH have been configured in accordance with the Go environment instructions.
-
-**Dependency Management:** Harbor uses [Go modules](https://github.com/golang/go/wiki/Modules) for dependency management of go code.  The official maintainers will take the responsibility for managing the code in `vendor` directory.  Please don't try to submit a PR to update the dependency code, open an issue instead.  If your PR requires a change in the vendor code please make sure you discuss it with the maintainers in advance.
 
 #### Web
 
@@ -210,12 +206,12 @@ Note: If you split your pull request to small changes, please make sure any of t
 Fork the Harbor repository and clone the code to your local workspace. Per Go's [workspace instructions](https://golang.org/doc/code.html#Workspaces), place Harbor's code on your `GOPATH`. Refer to section [Fork Repository](#fork-repository) for details.
 
 Define a local working directory:
-```
+```sh
 working_dir=$GOPATH/src/github.com/goharbor
 ```
 
 Set user to match your github profile name:
-```
+```sh
 user={your github profile name}
 ```
 
@@ -224,7 +220,7 @@ Both `$working_dir` and `$user` are mentioned in the figure above.
 ### Branch
 Changes should be made on your own fork in a new branch. The branch should be named  `XXX-description` where XXX is the number of the issue. PR should be rebased on top of `main` without multiple branches mixed into the PR. If your PR do not merge cleanly, use commands listed below to get it up to date.
 
-```
+```sh
 #goharbor is the origin upstream
 
 cd $working_dir/harbor
@@ -235,7 +231,7 @@ git rebase goharbor/main
 
 Branch from the updated `main` branch:
 
-```
+```sh
 git checkout -b my_feature main
 ```
 
@@ -247,7 +243,7 @@ Try to limit column width to 120 characters for both code and markdown documents
 
 As we are enforcing standards set by [golint](https://github.com/golang/lint), please always run golint on source code before committing your changes. If it reports an issue, in general, the preferred action is to fix the code to comply with the linter's recommendation
 because golint gives suggestions according to the stylistic conventions listed in [Effective Go](https://golang.org/doc/effective_go.html) and the [CodeReviewComments](https://github.com/golang/go/wiki/CodeReviewComments).
-```
+```sh
 #Install fgt and golint
 
 go install golang.org/x/lint/golint@latest
@@ -255,20 +251,20 @@ go install github.com/GeertJohan/fgt@latest
 
 #In the #working_dir/harbor, run
 
-go list ./... | grep -v -E 'vendor|tests' | xargs -L1 fgt golint
+go list ./... | grep -v -E 'tests' | xargs -L1 fgt golint
 
 ```
 
 Unit test cases should be added to cover the new code. Unit test framework for backend services is using [go testing](https://golang.org/doc/code.html#Testing). The UI library test framework is built based on [Jasmine](https://jasmine.github.io/) and [Karma](https://karma-runner.github.io/1.0/index.html), please refer to [Angular Testing](https://angular.io/guide/testing) for more details.
 
 Run go test cases:
-```
+```sh
 #cd #working_dir/src/[package]
 go test -v ./...
 ```
 
 Run UI library test cases:
-```
+```sh
 #cd #working_dir/src/portal/lib
 npm run test
 ```
@@ -311,7 +307,7 @@ The commit message should follow the convention on [How to Write a Git Commit Me
 
 To help write conformant commit messages, it is recommended to set up the [git-good-commit](https://github.com/tommarshall/git-good-commit) commit hook. Run this command in the Harbor repo's root directory:
 
-```
+```sh
 curl https://cdn.rawgit.com/tommarshall/git-good-commit/v0.6.1/hook.sh > .git/hooks/commit-msg && chmod +x .git/hooks/commit-msg
 ```
 
@@ -328,7 +324,7 @@ Once your pull request has been opened, harbor will run two CI pipelines against
 
 ### Push and Create PR
 When ready for review, push your branch to your fork repository on `github.com`:
-```
+```sh
 git push --force-with-lease $user my_feature
 
 ```

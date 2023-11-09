@@ -71,6 +71,8 @@ Resource  Harbor-Pages/Log_Rotation.robot
 Resource  Harbor-Pages/Log_Rotation_Elements.robot
 Resource  Harbor-Pages/Job_Service_Dashboard.robot
 Resource  Harbor-Pages/Job_Service_Dashboard_Elements.robot
+Resource  Harbor-Pages/SecurityHub.robot
+Resource  Harbor-Pages/SecurityHub_Elements.robot
 Resource  Harbor-Pages/Verify.robot
 Resource  Docker-Util.robot
 Resource  CNAB_Util.robot
@@ -179,6 +181,17 @@ Retry Wait Until Page Not Contains Element
     @{param}  Create List  ${element_xpath}
     Retry Action Keyword  Wait Until Page Does Not Contain Element  @{param}
 
+Retry Wait Element Count
+    [Arguments]  ${element_xpath}  ${expected_count}  ${times}=11
+    ${expected_count}=  Convert To Integer  ${expected_count}
+    FOR  ${n}  IN RANGE  1  ${times}
+        ${actual_count}=  Get Element Count  ${element_xpath}
+        ${result}=  Set Variable If  ${expected_count} == ${actual_count}  True  False
+        Exit For Loop If  ${result}
+        Sleep  2
+    END
+    Should Be True  ${result}
+
 Retry Select Object
     [Arguments]  ${obj_name}
     @{param}  Create List  ${obj_name}
@@ -226,9 +239,9 @@ Text Input
 
 Clear Field Of Characters
     [Arguments]  ${field}  ${character count}
-    [Documentation]  This keyword pushes the delete key (ascii: \8) a specified number of times in a specified field.
+    [Documentation]  This keyword pushes the BACKSPACE key a specified number of times in a specified field.
     FOR  ${index}  IN RANGE  ${character count}
-        Press Keys  ${field}  \\8
+        Press Keys  ${field}  BACKSPACE
     END
 
 Wait Unitl Command Success
@@ -237,7 +250,6 @@ Wait Unitl Command Success
         Log  Trying ${cmd}: ${n} ...  console=True
         ${rc}  ${output}=  Run And Return Rc And Output  ${cmd}
         Exit For Loop If  '${rc}'=='0'
-        Sleep  2
     END
     Log  Command Result is ${output}
     Should Be Equal As Strings  '${rc}'  '0'
@@ -256,7 +268,7 @@ Retry Keyword N Times When Error
         ${out}  Run Keyword And Ignore Error  ${keyword}  @{elements}
         Run Keyword If  '${keyword}'=='Make Swagger Client'  Exit For Loop If  '${out[0]}'=='PASS' and '${out[1]}'=='0'
         ...  ELSE  Exit For Loop If  '${out[0]}'=='PASS'
-        Sleep  10
+        Sleep  5
     END
     Run Keyword If  '${out[0]}'=='FAIL'  Capture Page Screenshot
     Should Be Equal As Strings  '${out[0]}'  'PASS'

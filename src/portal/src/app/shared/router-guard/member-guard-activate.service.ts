@@ -13,11 +13,9 @@
 // limitations under the License.
 import { Injectable } from '@angular/core';
 import {
-    CanActivate,
     Router,
     ActivatedRouteSnapshot,
     RouterStateSnapshot,
-    CanActivateChild,
 } from '@angular/router';
 import { SessionService } from '../services/session.service';
 import { Observable, of } from 'rxjs';
@@ -31,7 +29,7 @@ import { UN_LOGGED_PARAM, YES } from 'src/app/account/sign-in/sign-in.service';
 @Injectable({
     providedIn: 'root',
 })
-export class MemberGuard implements CanActivate, CanActivateChild {
+export class MemberGuard {
     constructor(
         private sessionService: SessionService,
         private projectService: ProjectService,
@@ -74,7 +72,7 @@ export class MemberGuard implements CanActivate, CanActivateChild {
         route: ActivatedRouteSnapshot
     ): Observable<boolean> {
         // Note: current user will have the permission to visit the project when the user can get response from GET /projects/:id API.
-        return this.projectService.getProject(projectId).pipe(
+        return this.projectService.getProjectFromCache(projectId).pipe(
             map(() => {
                 return true;
             }),

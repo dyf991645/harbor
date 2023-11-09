@@ -15,52 +15,31 @@
 package gc
 
 import (
-	"fmt"
-	"time"
+	"context"
 
-	"github.com/gomodule/redigo/redis"
-
-	"github.com/goharbor/harbor/src/jobservice/logger"
+	"github.com/goharbor/harbor/src/lib/cache"
 	"github.com/goharbor/harbor/src/lib/errors"
-	"github.com/goharbor/harbor/src/lib/retry"
 	"github.com/goharbor/harbor/src/pkg/registry"
-	"github.com/goharbor/harbor/src/pkg/registry/interceptor/readonly"
 )
 
 // delKeys ...
-func delKeys(con redis.Conn, pattern string) error {
-	iter := 0
-	keys := make([]string, 0)
-	for {
-		arr, err := redis.Values(con.Do("SCAN", iter, "MATCH", pattern))
-		if err != nil {
-			return fmt.Errorf("error retrieving '%s' keys: %s", pattern, err)
-		}
-		iter, err = redis.Int(arr[0], nil)
-		if err != nil {
-			return fmt.Errorf("unexpected type for Int, got type %T", err)
-		}
-		k, err := redis.Strings(arr[1], nil)
-		if err != nil {
-			return fmt.Errorf("converts an array command reply to a []string %v", err)
-		}
-		keys = append(keys, k...)
+func delKeys(ctx context.Context, c cache.Cache, pattern string) error {
+	iter, err := c.Scan(ctx, pattern)
+	if err != nil {
+		return errors.Wrap(err, "failed to scan keys")
+	}
 
-		if iter == 0 {
-			break
+	for iter.Next(ctx) {
+		if err := c.Delete(ctx, iter.Val()); err != nil {
+			return errors.Wrap(err, "failed to clean registry cache")
 		}
 	}
-	for _, key := range keys {
-		_, err := con.Do("DEL", key)
-		if err != nil {
-			return fmt.Errorf("failed to clean registry cache %v", err)
-		}
-	}
+
 	return nil
 }
 
 // v2DeleteManifest calls the registry API to remove manifest
-func v2DeleteManifest(logger logger.Interface, repository, digest string) error {
+func v2DeleteManifest(repository, digest string) error {
 	exist, _, err := registry.Cli.ManifestExist(repository, digest)
 	if err != nil {
 		return err
@@ -70,20 +49,7 @@ func v2DeleteManifest(logger logger.Interface, repository, digest string) error 
 	if !exist {
 		return nil
 	}
-	return retry.Retry(func() error {
-		err := registry.Cli.DeleteManifest(repository, digest)
-		// if the system is in read-only mode, return an Abort error to skip retrying
-		if err == readonly.Err {
-			return retry.Abort(err)
-		}
-		// If delete returned an err because the manifest is unknown, consider success
-		if errors.IsNotFoundErr(err) {
-			return nil
-		}
-		return err
-	}, retry.Callback(func(err error, sleep time.Duration) {
-		logger.Infof("failed to exec v2DeleteManifest, error: %v, will retry again after: %s", err, sleep)
-	}))
+	return registry.Cli.DeleteManifest(repository, digest)
 }
 
 // ignoreNotFound ignores the NotFoundErr error
@@ -92,4 +58,19 @@ func ignoreNotFound(f func() error) error {
 		return err
 	}
 	return nil
+}
+
+// divide if it is divisible, it gives the quotient. if it's not, it gives the remainder.
+func divide(a, b int) (int, error) {
+	if b == 0 {
+		return 0, errors.New("the divided cannot be zero")
+	}
+
+	quotient := a / b
+	remainder := a % b
+
+	if quotient == 0 {
+		return remainder, nil
+	}
+	return quotient, nil
 }

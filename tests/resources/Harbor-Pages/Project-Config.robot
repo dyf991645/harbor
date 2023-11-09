@@ -7,19 +7,12 @@ Resource  ../../resources/Util.robot
 *** Keywords ***
 
 Goto Project Config
-    Sleep  3
     Retry Element Click  //project-detail//ul/li[contains(.,'Summary')]
-    Sleep  3
-    Retry Double Keywords When Error  Retry Element Click  //project-detail//ul/li[contains(.,'Configuration')]  Retry Wait Element  //clr-checkbox-wrapper/label[contains(.,'Prevent vulnerable images from running.')]
-    Sleep  2
+    Retry Double Keywords When Error  Retry Element Click  //project-detail//ul/li[contains(.,'Configuration')]  Retry Wait Element  //clr-checkbox-wrapper/label[contains(@class,'clr-control-label') and contains(.,'Prevent vulnerable images from running.')]
 
 Click Project Public
     Mouse Down  //hbr-project-policy-config//input[@name='public']
     Mouse Up  //hbr-project-policy-config//input[@name='public']
-
-Click Notary Deployment Security
-    Mouse Down  //input[@id='content-trust']
-    Mouse Up  //input[@id='content-trust']
 
 Click Cosign Deployment Security
     Mouse Down  //input[@id='content-trust-cosign']
@@ -40,7 +33,6 @@ Click Auto Scan
     Mouse Up  //hbr-project-policy-config//input[@name='scan-image-on-push']
 
 Save Project Config
-    Sleep  1
     Retry Element Click  //hbr-project-policy-config//button[contains(.,'SAVE')]
 
 Public Should Be Selected
@@ -49,9 +41,6 @@ Public Should Be Selected
 Project Should Be Public
     [Arguments]  ${projectName}
     Retry Wait Until Page Contains Element  //clr-dg-row[contains(.,'${projectName}')]//clr-dg-cell[contains(.,'Public')]
-
-Content Notary Deployment security Be Selected
-    Checkbox Should Be Selected  //input[@id='content-trust']
 
 Content Cosign Deployment security Be Selected
     Checkbox Should Be Selected  //input[@id='content-trust-cosign']

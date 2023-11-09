@@ -45,6 +45,64 @@ Test Case - Disable Scan Schedule
     Retry Wait Until Page Contains  None
     Close Browser
 
+Test Case - Security Hub
+    [Tags]  security_hub
+    ${d}=  Get Current Date  result_format=%m%s
+    ${images}=  Create List  goharbor/harbor-log-base  goharbor/harbor-prepare-base  goharbor/harbor-redis-base  goharbor/harbor-nginx-base  goharbor/harbor-registry-base
+    ${tag}=  Set Variable  v2.2.0
+    ${digest}=  Set Variable  sha256:7bf979f25c6a6986eab83e100a7b78bd5195c9bcac03e823e64492bb17fa4dad
+    ${cve_id}=  Set Variable  CVE-2021-22926
+    ${package}=  Set Variable  curl
+    ${cvss_score_v3_from}=  Set Variable  6.5
+    ${cvss_score_v3_to}=  Set Variable  7.5
+    ${severity}=  Set Variable  High
+    ${index_repo}=  Set Variable  index${d}
+    ${cve_description}=  Set Variable  Description: libcurl-using applications can ask for a specific client certificate to be used in a transfer.
+    Init Chrome Driver
+    Sign In Harbor  ${HARBOR_URL}  ${HARBOR_ADMIN}  ${HARBOR_PASSWORD}
+    Create An New Project And Go Into Project  project${d}
+    FOR  ${image}  IN  @{images}
+        Push Image With Tag  ${ip}  ${HARBOR_ADMIN}  ${HARBOR_PASSWORD}  project${d}  ${image}  ${tag}  ${tag}
+        Go Into Repo  project${d}  ${image}
+        Scan Repo  ${tag}  Succeed
+    END
+    Docker Push Index  ${ip}  ${HARBOR_ADMIN}  ${HARBOR_PASSWORD}  ${ip}/project${d}/${index_repo}:${tag}  ${ip}/project${d}/${images}[0]:${tag}  ${ip}/project${d}/${images}[1]:${tag}
+    Back Project Home  project${d}
+    Refresh Repositories
+    Delete Repo  project${d}  ${images}[0]
+    Delete Repo  project${d}  ${images}[1]
+    Go Into Repo  project${d}  ${index_repo}
+    Scan Repo  ${tag}  Succeed
+    Switch To Security Hub
+    ${summary}=  Get Vulnerability System Summary From API
+    # Check The Total Vulnerabilities
+    Check The Total Vulnerabilities  ${summary}
+    # Check the Top 5 Most Dangerous Artifacts
+    ${dangerous_artifacts}=  Set Variable  ${summary["dangerous_artifacts"]}
+    Check The Top 5 Most Dangerous Artifacts  ${dangerous_artifacts}
+    # Check the Top 5 Most Dangerous CVEs
+    ${dangerous_cves}=  Set Variable  ${summary["dangerous_cves"]}
+    Check The Top 5 Most Dangerous CVEs  ${dangerous_cves}
+    # Check the vulnerabilities search
+    Retry Wait Element Not Visible  ${add_search_criteria_icon}
+    Retry Wait Element Not Visible  ${remove_search_criteria_icon}
+    Retry Wait Element Count  ${vulnerabilities_datagrid_row}  10
+    Check The Quick Search
+    Check The Search By One Condition  project${d}  project${d}/${images}[2]  ${digest}  ${cve_id}  ${package}  ${tag}  ${cvss_score_v3_from}  ${cvss_score_v3_to}  ${summary}
+    Check The Search By All Condition  project${d}  project${d}/${images}[2]  ${digest}  ${cve_id}  ${package}  ${tag}  ${cvss_score_v3_from}  ${cvss_score_v3_to}  ${severity}
+    # Check the vulnerabilities jump
+    Check The Vulnerabilities Jump  project${d}  ${images}[2]  ${cve_id}  ${cve_description}
+    # Check that there is no such artifact in the security hub after deleting the artifact
+    Go Into Project  project${d}
+    Delete Repo  project${d}  ${index_repo}
+    Switch To Security Hub
+    Retry Wait Until Page Not Contains Element  //div[@class='card'][2]//a[@title='project${d}/${index_repo}']
+    Select From List By Value  ${vulnerabilities_filter_select}  repository_name
+    Retry Text Input  ${vulnerabilities_filter_input}  project${d}/${index_repo}
+    Retry Button Click  ${security_hub_search_btn}
+    Retry Wait Element Count  //div[@class='datagrid']//clr-dg-cell[2][@title='project${d}/${index_repo}']  0
+    Close Browser
+
 Test Case - Manual Scan All
     Body Of Manual Scan All  Critical  High
 
@@ -54,10 +112,8 @@ Test Case - Scan A Tag In The Repo
 Test Case - Scan As An Unprivileged User
     Init Chrome Driver
     Push Image  ${ip}  ${HARBOR_ADMIN}  ${HARBOR_PASSWORD}  library  hello-world
-
     Sign In Harbor  ${HARBOR_URL}  user024  Test1@34
-    Go Into Project  library
-    Go Into Repo  hello-world
+    Go Into Repo  library  hello-world
     Select Object  latest
     Scan Is Disabled
     Close Browser
@@ -83,8 +139,7 @@ Test Case - Project Level Image Serverity Policy
     ${image}=  Set Variable  redis
     Create An New Project And Go Into Project  project${d}
     Push Image  ${ip}  ${HARBOR_ADMIN}  ${HARBOR_PASSWORD}  project${d}  ${image}  sha256=${sha256}
-    Go Into Project  project${d}
-    Go Into Repo  ${image}
+    Go Into Repo  project${d}  ${image}
     Scan Repo  ${sha256}  Succeed
     Navigate To Projects
     Go Into Project  project${d}
@@ -98,9 +153,11 @@ Test Case - Verfiy System Level CVE Allowlist
     Body Of Verfiy System Level CVE Allowlist  goharbor/harbor-portal  55d776fc7f431cdd008c3d8fc3e090c81c1368ed9ed85335f4664df71f864f0d  CVE-2021-36222\nCVE-2021-43527 \nCVE-2021-4044 \nCVE-2021-36084 \nCVE-2021-36085 \nCVE-2021-36086 \nCVE-2021-37750 \nCVE-2021-40528  CVE-2021-43519
 
 Test Case - Verfiy Project Level CVE Allowlist
+    [Tags]  proj_cve
     Body Of Verfiy Project Level CVE Allowlist  goharbor/harbor-portal  55d776fc7f431cdd008c3d8fc3e090c81c1368ed9ed85335f4664df71f864f0d  CVE-2021-36222\nCVE-2021-43527 \nCVE-2021-4044 \nCVE-2021-36084 \nCVE-2021-36085 \nCVE-2021-36086 \nCVE-2021-37750 \nCVE-2021-40528  CVE-2021-43519
 
 Test Case - Verfiy Project Level CVE Allowlist By Quick Way of Add System
+    [Tags]  proj_cve_quick_add_sys
     Body Of Verfiy Project Level CVE Allowlist By Quick Way of Add System  goharbor/harbor-portal  55d776fc7f431cdd008c3d8fc3e090c81c1368ed9ed85335f4664df71f864f0d  CVE-2021-36222\nCVE-2021-43527 \nCVE-2021-4044 \nCVE-2021-36084 \nCVE-2021-36085 \nCVE-2021-36086 \nCVE-2021-37750 \nCVE-2021-40528 \nCVE-2021-43519
 
 Test Case - Stop Scan And Stop Scan All

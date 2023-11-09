@@ -16,7 +16,7 @@ package pkg
 
 //go:generate mockery --case snake --dir ../../pkg/artifact --name Manager --output ./artifact --outpkg artifact
 //go:generate mockery --case snake --dir ../../pkg/blob --name Manager --output ./blob --outpkg blob
-//go:generate mockery --case snake --dir ../../vendor/github.com/docker/distribution --name Manifest --output ./distribution --outpkg distribution
+// go::generate mockery --case snake --dir ../../vendor/github.com/docker/distribution --name Manifest --output ./distribution --outpkg distribution
 //go:generate mockery --case snake --dir ../../pkg/project --name Manager --output ./project --outpkg project
 //go:generate mockery --case snake --dir ../../pkg/project/metadata --name Manager --output ./project/metadata --outpkg metadata
 //go:generate mockery --case snake --dir ../../pkg/quota --name Manager --output ./quota --outpkg quota
@@ -73,3 +73,4 @@ package pkg
 //go:generate mockery --case snake --dir ../../pkg/jobmonitor --name QueueManager --output ./jobmonitor --outpkg jobmonitor
 //go:generate mockery --case snake --dir ../../pkg/jobmonitor --name RedisClient --output ./jobmonitor --outpkg jobmonitor
 //go:generate mockery --case snake --dir ../../pkg/queuestatus --name Manager --output ./queuestatus --outpkg queuestatus
+//go:generate mockery --case snake --dir ../../pkg/securityhub --name Manager --output ./securityhub --outpkg securityhub

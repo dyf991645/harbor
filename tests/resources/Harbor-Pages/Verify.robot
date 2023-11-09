@@ -397,8 +397,8 @@ Verify System Setting
     Sign In Harbor  ${HARBOR_URL}  ${HARBOR_ADMIN}  ${HARBOR_PASSWORD}
     Switch To Configure
     Page Should Contain  ${authtype}[0]
-    Run Keyword If  ${selfreg}[0] == 'True'  Checkbox Should Be Checked  //clr-checkbox-wrapper[@id='selfReg']//label
-    Run Keyword If  ${selfreg}[0] == 'False'  Checkbox Should Not Be Checked  //clr-checkbox-wrapper[@id='selfReg']//label
+    Run Keyword If  ${selfreg}[0] == 'True'  Checkbox Should Be Checked  //clr-checkbox-wrapper[@id='selfReg']//label[contains(@class,'clr-control-label')]
+    Run Keyword If  ${selfreg}[0] == 'False'  Checkbox Should Not Be Checked  //clr-checkbox-wrapper[@id='selfReg']//label[contains(@class,'clr-control-label')]
     Switch To System Settings
     ${ret}  Get Selected List Value  xpath=//select[@id='proCreation']
     Should Be Equal As Strings  ${ret}  ${creation}[0]
@@ -463,8 +463,7 @@ Verify Artifact Index
     FOR    ${project}    IN    @{project}
         ${name}=  Get Value From Json  ${json}  $.projects[?(@.name=${project})].artifact_index.name
         ${tag}=  Get Value From Json  ${json}  $.projects[?(@.name=${project})].artifact_index.tag
-        Go Into Project  ${project}  has_image=${true}
-        Go Into Repo  ${project}/${name}[0]
+        Go Into Repo  ${project}  ${name}[0]
         Go Into Index And Contain Artifacts  ${tag}[0]  total_artifact_count=2
         Pull image  ${ip}  ${HARBOR_ADMIN}  ${HARBOR_PASSWORD}  ${project}  ${name}[0]:${tag}[0]
         Navigate To Projects
@@ -474,9 +473,7 @@ Verify Artifact Index
 Loop Repo
     [Arguments]  ${project}  @{repos}
     FOR    ${repo}    IN    @{repos}
-        Navigate To Projects
-        Go Into Project  ${project}  has_image=${true}
-        Go Into Repo  ${project}/${repo}[0][cache_image_namespace]/${repo}[0][cache_image]
+        Go Into Repo  ${project}  ${repo}[0][cache_image_namespace]/${repo}[0][cache_image]
         Pull image  ${ip}  ${HARBOR_ADMIN}  ${HARBOR_PASSWORD}  ${project}  ${repo}[0][cache_image_namespace]/${repo}[0][cache_image]:${repo}[0][tag]
     END
 
@@ -557,12 +554,3 @@ Verify Quotas Display
         Should Match Regexp  ${storage_quota_ret}  ${str_expected}
     END
     Close Browser
-
-
-Verify Re-sign Image
-    [Arguments]    ${json}
-    Log To Console  "Verify Quotas Display..."
-    @{project}=  Get Value From Json  ${json}  $.notary_projects.[*].name
-    FOR    ${project}    IN    @{project}
-        Body Of Admin Push Signed Image  ${project}  alpine  new_tag  ${HARBOR_ADMIN}  ${HARBOR_PASSWORD}  clear_trust_dir=${false}
-    END
